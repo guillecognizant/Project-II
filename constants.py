@@ -4,7 +4,7 @@ PATH = "projectII_alvaroG-GuillermoH/data/Real_Estate.csv"
 
 
 # Config variables
-drop_zero_vals = True
+drop_zero_vals = False
 
 
 #Database columns
