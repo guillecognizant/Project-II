@@ -6,8 +6,9 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import make_scorer
 
 import constants
 
@@ -133,44 +134,52 @@ def linear_regression_train(X_train_scaled, y_train):
     model.fit(X_train_scaled, y_train)
     return model
 
-## Decision Tree Regressor
-def tree_regression_grid_train(param_grid, kf, X_train_scaled, y_train):
-    ''' Train tree regression with gridsearch '''
-    tree = GridSearchCV(DecisionTreeRegressor(),
+## GridSearch and train model
+def grid_search_train(model, param_grid, kf, X_train_scaled, y_train):
+    ''' Train model with gridsearch '''
+    best_model = GridSearchCV(model,
                         param_grid,
                         cv=kf,
                         scoring='neg_mean_absolute_error',
                         return_train_score=True,
                         refit=True)
 
-    tree.fit(X_train_scaled, y_train)
+    best_model.fit(X_train_scaled, y_train)
 
-    return tree
+    return best_model
 
-## Random Tree Regressor
-def randtree_regression_grid_train(param_grid, kf, X_train_scaled, y_train):
-    random_forest = GridSearchCV(RandomForestRegressor(),
-                        param_grid,
-                        cv=kf,
-                        scoring='neg_mean_absolute_error',
-                        return_train_score=True,
-                        refit=True)
+## Select best model with cross validation
+def cross_val_models(models, X_train, y_train):
+    '''Calculate the metrics for each model'''
+    # dictionary to hold the evaluation metrics for each model
+    results = {}
 
-    random_forest.fit(X_train_scaled, y_train)
+    # train and evaluate each model
+    for name, model in models.items():
+        print(f"MODEL: {name}")
+        pipe = Pipeline(
+        [
+            ("scalar", StandardScaler()),
+            ("estimator",model),
+        ],
+        verbose=False,
+        )
+        
+        CV = 5
 
-    return random_forest
+        scores_MAE = cross_val_score(pipe, X_train, y_train, scoring=make_scorer(mean_absolute_error), cv=CV)
+        scores_R2 = cross_val_score(pipe, X_train, y_train, scoring=make_scorer(r2_score), cv=CV)
+        scores_MSE = cross_val_score(pipe, X_train, y_train, scoring=make_scorer(mean_squared_error), cv=CV)
+        
+        
+        # storing the metrics
+        results[name] = {"MAE": scores_MAE.mean(),
+                        "MAE std": scores_MAE.std(),
+                        "R2": scores_R2.mean(),
+                        "R2 std":scores_R2.std(),
+                        "MSE": scores_MSE.mean(),
+                        "MSE std":scores_MSE.std()
+                        }
 
-## Gradient Boosting Regressor
-def gradient_boosting_grid_train(param_grid, kf, X_train_scaled, y_train):
-    gradient_boosting = GridSearchCV(GradientBoostingRegressor(),
-                        param_grid,
-                        cv=kf,
-                        scoring='neg_mean_absolute_error',
-                        return_train_score=True,
-                        refit=True)
-
-    gradient_boosting.fit(X_train_scaled, y_train)
-
-    return gradient_boosting
-
+    return results
 
