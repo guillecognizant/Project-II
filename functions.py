@@ -9,6 +9,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 
 import constants
 
