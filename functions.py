@@ -2,12 +2,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
 import constants
+
 
 # Plotting 
 def histograms_eda(data):
@@ -86,6 +89,7 @@ def correlation_matrix_eda(data):
 
 # ------------------------------------------
 
+
 # Models prep 
 def data_sep_train_test(data):
     ''' Function to separate dataset into train and test '''
@@ -106,6 +110,18 @@ def data_normalization(X_train, X_test):
 
     return scaler.fit_transform(X_train), scaler.transform(X_test)
 
+def plot_output_pred(y_test, y_pred_lr):
+    ''' Plot output vs predicted '''
+    # Visualization: Actual vs. Predicted values
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y_test, y_pred_lr, alpha=0.5)
+    plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=2)
+    plt.xlabel('Actual')
+    plt.ylabel('Predicted')
+    plt.title('Actual vs. Predicted House Prices')
+    plt.show()
+
+
 # Models 
 ## Linear regression
 def linear_regression_train(X_train_scaled, y_train):
@@ -117,13 +133,44 @@ def linear_regression_train(X_train_scaled, y_train):
     model.fit(X_train_scaled, y_train)
     return model
 
-def plot_output_pred(y_test, y_pred_lr):
-    ''' Plot output vs predicted '''
-    # Visualization: Actual vs. Predicted values
-    plt.figure(figsize=(10, 6))
-    plt.scatter(y_test, y_pred_lr, alpha=0.5)
-    plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=2)
-    plt.xlabel('Actual')
-    plt.ylabel('Predicted')
-    plt.title('Actual vs. Predicted House Prices')
-    plt.show()
+## Decision Tree Regressor
+def tree_regression_grid_train(param_grid, kf, X_train_scaled, y_train):
+    ''' Train tree regression with gridsearch '''
+    tree = GridSearchCV(DecisionTreeRegressor(),
+                        param_grid,
+                        cv=kf,
+                        scoring='neg_mean_absolute_error',
+                        return_train_score=True,
+                        refit=True)
+
+    tree.fit(X_train_scaled, y_train)
+
+    return tree
+
+## Random Tree Regressor
+def randtree_regression_grid_train(param_grid, kf, X_train_scaled, y_train):
+    random_forest = GridSearchCV(RandomForestRegressor(),
+                        param_grid,
+                        cv=kf,
+                        scoring='neg_mean_absolute_error',
+                        return_train_score=True,
+                        refit=True)
+
+    random_forest.fit(X_train_scaled, y_train)
+
+    return random_forest
+
+## Gradient Boosting Regressor
+def gradient_boosting_grid_train(param_grid, kf, X_train_scaled, y_train):
+    gradient_boosting = GridSearchCV(GradientBoostingRegressor(),
+                        param_grid,
+                        cv=kf,
+                        scoring='neg_mean_absolute_error',
+                        return_train_score=True,
+                        refit=True)
+
+    gradient_boosting.fit(X_train_scaled, y_train)
+
+    return gradient_boosting
+
+
