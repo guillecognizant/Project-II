@@ -50,7 +50,7 @@ def scattermap_eda(data):
                             lon=constants.lon_col, 
                             #hover_name="Address", 
                             #hover_data=["Address", "Listed"],
-                            color=constants.house_age_col,
+                            color=constants.price_col,
                             color_continuous_scale='viridis',
                             size=constants.price_col,
                             zoom=8, 
